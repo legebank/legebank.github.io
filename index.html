@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LegeBank – +10% codziennie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1822;--panel:#15303f;--line:#274656;--text:#f3efe4;--mute:#8fa8b5;--gold:#f4b93b;--gold-d:#9a6400;--ok:#52d68f;--no:#ff7b7b;--px:"Press Start 2P",ui-monospace,monospace;--body:"Rubik","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font:400 16px/1.55 var(--body);color-scheme:dark;
+ background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px) 0 0/32px 32px,radial-gradient(900px 500px at 12% -8%,#1b3b4d,transparent 60%),var(--bg)}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 18px 64px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 30px}
+.logo{display:flex;align-items:center;gap:10px;font:400 14px var(--px)}
+.coin{width:22px;height:22px;background:var(--gold);box-shadow:inset -4px -4px 0 var(--gold-d),inset 4px 4px 0 #ffe08a}
+.badge{font-size:13px;color:var(--mute);border:2px solid var(--line);padding:4px 10px;border-radius:4px}
+.grid{display:grid;gap:36px}
+@media(min-width:860px){.grid{grid-template-columns:1.05fr .95fr;align-items:start}}
+.big{margin:0;font:400 clamp(52px,13vw,104px)/1 var(--px);color:var(--gold);text-shadow:4px 4px 0 var(--gold-d),8px 8px 0 #3d2800;letter-spacing:-2px}
+.sub{font:500 clamp(20px,4vw,28px)/1.25 var(--body);margin:28px 0 22px}
+.steps{list-style:none;margin:0 0 22px;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps li{display:flex;gap:12px;align-items:flex-start;counter-increment:s}
+.steps li::before{content:counter(s);flex:none;width:28px;height:28px;display:grid;place-items:center;background:var(--panel);border:2px solid var(--gold);color:var(--gold);font:400 11px var(--px);border-radius:4px}
+.rules{color:var(--mute);font-size:14px;max-width:46ch;margin:0}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:6px;box-shadow:6px 6px 0 rgba(0,0,0,.35)}
+.tabs{display:flex;border-bottom:2px solid var(--line)}
+.tabs button{flex:1;padding:14px 10px;background:transparent;border:0;color:var(--mute);font:500 15px var(--body);cursor:pointer}
+.tabs button.on{color:var(--gold);box-shadow:inset 0 -3px 0 var(--gold)}
+.pane{padding:22px}
+label,.lab{display:block;font-size:14px;color:var(--mute);margin:0 0 6px}
+input[type=text]{width:100%;padding:12px 14px;margin:0 0 6px;background:var(--bg);border:2px solid var(--line);border-radius:4px;color:var(--text);font:500 17px var(--body)}
+.help{font-size:13px;color:var(--mute);margin:0 0 16px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.chips button{padding:6px 14px;background:var(--bg);border:2px solid var(--line);color:var(--text);border-radius:4px;font:500 14px var(--body);cursor:pointer}
+.chips button:hover{border-color:var(--gold)}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 18px}
+.calc div{background:var(--bg);border:2px solid var(--line);border-radius:4px;padding:10px}
+.calc small{display:block;color:var(--mute);font-size:12px}
+.calc b{color:var(--ok);font-size:16px;word-break:break-word}
+.empty{color:var(--mute);font-size:14px;grid-column:1/-1;margin:0}
+.btn{width:100%;padding:14px;border:0;border-bottom:5px solid var(--gold-d);border-radius:4px;background:var(--gold);color:#2a1c00;font:700 17px var(--body);cursor:pointer}
+.btn:active{transform:translateY(3px);border-bottom-width:2px}
+.btn:disabled{opacity:.6;cursor:wait}
+.link{background:none;border:0;color:var(--mute);font:inherit;text-decoration:underline;cursor:pointer;padding:14px 0 0}
+.err{color:var(--no);font-size:14px;min-height:21px;margin:0 0 8px}
+.cmd{display:flex;gap:10px;align-items:center;background:var(--bg);border:2px dashed var(--gold);border-radius:4px;padding:12px;margin:0 0 20px;font:500 15px Consolas,monospace;word-break:break-all}
+.cmd span{flex:1}
+.cmd button{border:2px solid var(--line);background:var(--panel);color:var(--text);border-radius:4px;padding:6px 12px;font:500 13px var(--body);cursor:pointer}
+.drop{display:flex;align-items:center;gap:12px;padding:14px;border:2px dashed var(--line);border-radius:4px;cursor:pointer;margin:0 0 8px;color:var(--mute);font-size:14px}
+.drop:hover,.drop:focus-within{border-color:var(--gold)}
+.drop img{width:56px;height:56px;object-fit:cover;border-radius:4px;border:2px solid var(--line)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.row{background:var(--bg);border:2px solid var(--line);border-radius:4px;padding:14px;margin:0 0 12px}
+.rh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rh strong{color:var(--gold);font-size:17px}
+.meta{color:var(--mute);font-size:13px;margin:2px 0 12px}
+.row .calc{margin:0}.row p:last-child{margin-bottom:0}
+.tag{padding:2px 10px;border-radius:99px;font-size:12px;border:2px solid var(--line);color:var(--mute)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}.tag.no{color:var(--no);border-color:var(--no)}
+button:focus-visible,input:focus-visible,.drop:focus-within{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{position:relative;z-index:1}
+.bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bg i{position:absolute;bottom:-30px;width:14px;height:14px;background:var(--gold);box-shadow:inset -3px -3px 0 var(--gold-d),inset 3px 3px 0 #ffe08a;opacity:0;animation:drift linear infinite}
+.bc{position:fixed;z-index:50;width:12px;height:12px;margin:-6px;background:var(--gold);box-shadow:inset -3px -3px 0 var(--gold-d),inset 3px 3px 0 #ffe08a;pointer-events:none;animation:burst .9s ease-out forwards}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.92);opacity:.5}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes drift{0%{transform:translateY(0) rotate(0);opacity:0}12%{opacity:.35}100%{transform:translateY(-115vh) rotate(200deg);opacity:0}}
+@keyframes burst{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}}
+@keyframes flip{0%,70%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+.coin{animation:flip 4s ease-in-out infinite}
+.sub,.steps li,.rules{animation:rise .6s both}
+.sub{animation-delay:.5s}.steps li:nth-child(1){animation-delay:.7s}.steps li:nth-child(2){animation-delay:.85s}.steps li:nth-child(3){animation-delay:1s}.rules{animation-delay:1.15s}
+.card{animation:rise .6s .2s both}
+#step1,#step2,#p-pay{animation:slide .35s both}
+.calc div{animation:pop .3s both}
+.err:not(:empty){animation:rise .25s both}
+.row{animation:rise .4s both}.row:nth-child(2){animation-delay:.08s}.row:nth-child(3){animation-delay:.16s}.row:nth-child(4){animation-delay:.24s}.row.q{animation:none}
+.tabs button{transition:color .2s,box-shadow .2s}
+.btn{transition:filter .15s,transform .1s}.btn:hover:not(:disabled){filter:brightness(1.1)}
+.chips button,.cmd button,.drop,input[type=text]{transition:border-color .2s,background .2s}
+input[type=text]:focus{border-color:var(--gold)}
+.chips button:active{transform:translateY(2px)}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg" id="bg" aria-hidden="true"></div>
+<div class="wrap">
+<header class="bar"><div class="logo"><i class="coin"></i>LegeBank</div><span class="badge">Bank walutowy serwera</span></header>
+<div class="grid">
+  <div>
+    <h1 class="big" id="big">+10%</h1>
+    <p class="sub">codziennie od wpłaconej kwoty</p>
+    <ol class="steps">
+      <li>Wpisz nick i kwotę (minimum 500 000).</li>
+      <li>Wyślij komendę <code>/pay</code> w grze i dodaj screenshot przelewu.</li>
+      <li>Po zatwierdzeniu wpłaty zysk naliczany jest co 24 h.</li>
+    </ol>
+    <p class="rules" id="rules"></p>
+  </div>
+
+  <section class="card">
+    <div class="tabs">
+      <button class="on" id="t-dep" type="button">Wpłata</button>
+      <button id="t-pay" type="button" hidden>Wypłaty</button>
+    </div>
+
+    <div class="pane" id="p-dep">
+      <div id="step1">
+        <label for="nick">Nick w grze</label>
+        <input id="nick" type="text" autocomplete="off" maxlength="16" placeholder="np. Steve123">
+        <p class="help">Dokładnie taki, z jakim wysyłasz /pay.</p>
+        <label for="amt">Kwota</label>
+        <input id="amt" type="text" autocomplete="off" placeholder="np. 2m">
+        <p class="help" id="minhelp"></p>
+        <div class="chips" id="chips">
+          <button type="button" data-v="500k">500k</button><button type="button" data-v="1m">1m</button><button type="button" data-v="5m">5m</button><button type="button" data-v="10m">10m</button>
+        </div>
+        <div class="calc" id="calc"></div>
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn" id="go" type="button">Dalej</button>
+      </div>
+
+      <div id="step2" hidden>
+        <p class="help" id="sum"></p>
+        <p class="lab">1. Wpisz w grze</p>
+        <div class="cmd"><span id="cmd"></span><button id="copy" type="button">Kopiuj</button></div>
+        <p class="lab">2. Dodaj screenshot z przelewu</p>
+        <label class="drop" for="proof"><img id="thumb" alt="" hidden><span id="fname">Kliknij lub upuść obraz (max 8 MB)</span></label>
+        <input class="sr" id="proof" type="file" accept="image/*">
+        <p class="help">Na screenie musi być widoczny przelew. Właściciel sprawdza każdą wpłatę.</p>
+        <p class="err" id="err2" role="alert"></p>
+        <button class="btn" id="sent" type="button">Wysłałem</button>
+        <button class="link" id="back" type="button">Wróć i zmień dane</button>
+      </div>
+    </div>
+
+    <div class="pane" id="p-pay" hidden><div id="list"></div></div>
+  </section>
+</div>
+</div>
+
+<script>
+// ===== USTAWIENIA =====
+var CONFIG = {
+  receiver: "Legebank22",
+  webhook: "https://discord.com/api/webhooks/1573662881503772762/XifxRGA0y77Jjxfj9Tthp95_ldVMj4ED1GBmTuMTbMWNfpu0qR6FMTZ33vmcTuXNhBtf",
+  statusFile: "status.json",
+  dailyPercent: 10,
+  minDeposit: 500000,
+  rulesText: "Zysk: 10% kwoty początkowej za każde pełne 24 h od zgłoszenia, bez procentu składanego. Wypłata na prośbę u właściciela po zatwierdzeniu wpłaty."
+};
+// ======================
+
+var $ = function(id){return document.getElementById(id)};
+var KEY = "legebank_deposits", pending = null, thumbURL = null;
+var statuses = {approved:[], rejected:[]};
+var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+function el(t,c,x){var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
+function save(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+function fmt(n){return Math.round(n).toLocaleString("pl-PL")}
+function parseAmount(s){
+  s = s.trim().toLowerCase().replace(/\s/g,"").replace(",",".");
+  var m = s.match(/^(\d+(?:\.\d+)?)([kmb]?)$/);
+  if(!m) return NaN;
+  return Math.round(parseFloat(m[1])*{"":1,k:1e3,m:1e6,b:1e9}[m[2]]);
+}
+
+$("rules").textContent = CONFIG.rulesText;
+
+if(!reduce){ // powoli unoszące się monety w tle
+  for(var k=0;k<9;k++){
+    var c = el("i");
+    c.style.left = (5 + Math.random()*90) + "%";
+    c.style.animationDuration = (16 + Math.random()*14) + "s";
+    c.style.animationDelay = (-Math.random()*20) + "s";
+    $("bg").appendChild(c);
+  }
+}
+
+function burst(b){ // eksplozja monet po wysłaniu zgłoszenia
+  if(reduce) return;
+  var r = b.getBoundingClientRect(), x = r.left + r.width/2, y = r.top + r.height/2;
+  for(var i=0;i<22;i++){
+    var c = el("i","bc"), a = Math.random()*Math.PI*2, d = 80 + Math.random()*150;
+    c.style.left = x + "px"; c.style.top = y + "px";
+    c.style.setProperty("--dx", Math.cos(a)*d + "px");
+    c.style.setProperty("--dy", (Math.sin(a)*d - 60) + "px");
+    document.body.appendChild(c);
+    setTimeout((function(n){ return function(){ n.remove(); }; })(c), 1000);
+  }
+}
+$("minhelp").textContent = "Minimalna wpłata: " + fmt(CONFIG.minDeposit) + ". Skróty: 500k, 2m, 1b.";
+
+(function(){ // hero: licznik od 0 do 10%
+  var b = $("big"), t0 = null;
+  if(reduce) return;
+  function step(t){ if(!t0) t0 = t; var p = Math.min((t-t0)/900,1);
+    b.textContent = "+" + Math.round(CONFIG.dailyPercent*(1-Math.pow(1-p,3))) + "%";
+    if(p<1) requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+})();
+
+function showTab(w){
+  $("p-dep").hidden = w !== "dep"; $("p-pay").hidden = w !== "pay";
+  $("t-dep").className = w === "dep" ? "on" : ""; $("t-pay").className = w === "pay" ? "on" : "";
+  if(w === "pay") loadStatus();
+}
+function refreshTabs(){ $("t-pay").hidden = load().length === 0; }
+$("t-dep").onclick = function(){showTab("dep")};
+$("t-pay").onclick = function(){showTab("pay")};
+
+function renderCalc(){
+  var v = parseAmount($("amt").value), box = $("calc"); box.textContent = "";
+  if(!(v>0)){ box.appendChild(el("p","empty","Wpisz kwotę, aby zobaczyć zysk.")); return; }
+  var d = v*CONFIG.dailyPercent/100;
+  [1,7,30].forEach(function(n){
+    var c = el("div"); c.appendChild(el("small",null,n+(n===1?" dzień":" dni"))); c.appendChild(el("b",null,"+"+fmt(d*n))); box.appendChild(c);
+  });
+}
+$("amt").oninput = renderCalc;
+$("chips").onclick = function(e){ var v = e.target.getAttribute("data-v"); if(v){ $("amt").value = v; renderCalc(); } };
+renderCalc();
+
+$("go").onclick = function(){
+  var nick = $("nick").value.trim(), amt = parseAmount($("amt").value);
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(nick)){ $("err").textContent = "Nick: 3–16 znaków (litery, cyfry, _)."; return; }
+  if(!(amt>0)){ $("err").textContent = "Podaj poprawną kwotę, np. 500k lub 2m."; return; }
+  if(amt < CONFIG.minDeposit){ $("err").textContent = "Minimalna wpłata to " + fmt(CONFIG.minDeposit) + "."; return; }
+  $("err").textContent = "";
+  pending = {nick:nick, amount:amt};
+  $("cmd").textContent = "/pay " + CONFIG.receiver + " " + amt;
+  $("sum").textContent = nick + " · " + fmt(amt);
+  $("step1").hidden = true; $("step2").hidden = false;
+};
+$("back").onclick = function(){ $("step2").hidden = true; $("step1").hidden = false; };
+
+$("copy").onclick = function(){
+  var b = this;
+  if(navigator.clipboard) navigator.clipboard.writeText($("cmd").textContent).then(function(){ b.textContent = "Skopiowano"; setTimeout(function(){b.textContent="Kopiuj"},1500); });
+};
+
+function showThumb(){
+  var f = $("proof").files[0], t = $("thumb");
+  if(thumbURL){ URL.revokeObjectURL(thumbURL); thumbURL = null; }
+  if(f){ thumbURL = URL.createObjectURL(f); t.src = thumbURL; t.hidden = false; $("fname").textContent = f.name; }
+  else { t.hidden = true; $("fname").textContent = "Kliknij lub upuść obraz (max 8 MB)"; }
+}
+$("proof").onchange = showThumb;
+var dz = document.querySelector(".drop");
+["dragover","drop"].forEach(function(ev){ dz.addEventListener(ev,function(e){
+  e.preventDefault();
+  if(ev === "drop" && e.dataTransfer.files.length){ $("proof").files = e.dataTransfer.files; showThumb(); }
+}); });
+
+$("sent").onclick = function(){
+  if(!pending) return;
+  var btn = this, e = $("err2"), f = $("proof").files[0];
+  if(!f){ e.textContent = "Dodaj screenshot z przelewu."; return; }
+  if(!/^image\//.test(f.type)){ e.textContent = "Plik musi być obrazem."; return; }
+  if(f.size > 8*1024*1024){ e.textContent = "Screenshot jest za duży (max 8 MB)."; return; }
+  if(CONFIG.webhook.indexOf("https://discord.com/api/webhooks/") !== 0){ e.textContent = "Brak webhooka w CONFIG."; return; }
+  var last = +localStorage.getItem("legebank_last") || 0;
+  if(Date.now()-last < 60000){ e.textContent = "Poczekaj chwilę przed kolejnym zgłoszeniem."; return; }
+  e.textContent = ""; btn.disabled = true; btn.textContent = "Wysyłanie...";
+  var id = "LB-" + Math.random().toString(36).slice(2,8).toUpperCase();
+  var ext = (f.type.split("/")[1]||"png").replace(/[^a-z0-9]/gi,"");
+  var fname = "dowod-" + id + "." + ext;
+  var fd = new FormData();
+  fd.append("payload_json", JSON.stringify({
+    content: "Nowa wpłata do zatwierdzenia: **" + id + "**",
+    allowed_mentions: {parse:[]},
+    embeds: [{title:"Wpłata " + id, color:15776058,
+      fields:[{name:"Nick",value:pending.nick,inline:true},{name:"Kwota",value:fmt(pending.amount),inline:true},{name:"Komenda",value:"/pay " + CONFIG.receiver + " " + pending.amount}],
+      image:{url:"attachment://" + fname},
+      footer:{text:"Zatwierdź: dodaj " + id + " do status.json"}}]
+  }));
+  fd.append("files[0]", f, fname);
+  function sendError(x){
+    var s = x && x.status;
+    if(x && x.net === "preview") return "Podgląd w oknie czatu nie pozwala wysyłać plików. Otwórz stronę z GitHub Pages albo pobrany plik index.html w przeglądarce.";
+    if(x && x.net === "blocked") return "Przeglądarka blokuje połączenie z Discordem (adblock, Brave Shields, rozszerzenie lub sieć). Wyłącz blokadę dla tej strony albo spróbuj w trybie incognito.";
+    if(x && x.net === "cors") return "Discord odrzucił zapytanie z tej strony (CORS). Sprawdź, czy zgłoszenie jednak dotarło na kanał. Właściciel powinien użyć serwera pośredniczącego.";
+    if(x && x.net) return "Brak połączenia z Discordem. Sprawdź internet.";
+    if(s === 404 || s === 401) return "Webhook jest nieprawidłowy lub został usunięty (kod " + s + "). Właściciel musi wkleić nowy URL w CONFIG.";
+    if(s === 429) return "Za dużo zgłoszeń naraz. Spróbuj za chwilę.";
+    if(s === 413) return "Screenshot jest za duży dla Discorda.";
+    if(s) return "Discord odrzucił zgłoszenie (kod " + s + ").";
+    return "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.";
+  }
+  function done(){
+    try{
+      burst(btn);
+      var a = load(); a.push({id:id, nick:pending.nick, amount:pending.amount, ts:Date.now()}); save(a);
+      try{ localStorage.setItem("legebank_last", String(Date.now())); }catch(z){}
+      pending = null;
+      $("nick").value = ""; $("amt").value = ""; $("proof").value = ""; showThumb(); renderCalc();
+      $("step2").hidden = true; $("step1").hidden = false;
+      refreshTabs(); showTab("pay");
+    }catch(z){ console.error(z); }
+  }
+  fetch(CONFIG.webhook, {method:"POST", body:fd}).then(function(r){
+    if(r.ok){ done(); return; }
+    return r.text().then(function(t){ throw {status:r.status, body:t}; });
+  }, function(err){
+    console.error("LegeBank fetch:", err);
+    if(err && err.name === "DataCloneError") throw {net:"preview"};
+    return fetch(CONFIG.webhook, {method:"GET", mode:"no-cors"}).then(
+      function(){ throw {net:"cors"}; },
+      function(){ throw {net:"blocked"}; });
+  }).catch(function(x){
+    console.error("LegeBank webhook:", JSON.stringify(x));
+    e.textContent = sendError(x);
+  }).then(function(){ btn.disabled = false; btn.textContent = "Wysłałem"; });
+};
+
+function loadStatus(){
+  fetch(CONFIG.statusFile + "?t=" + Date.now()).then(function(r){ return r.json(); })
+    .then(function(j){ statuses = {approved:j.approved||[], rejected:j.rejected||[]}; })
+    .catch(function(){}).then(renderPayouts);
+}
+
+function renderPayouts(q){
+  var box = $("list"); box.textContent = "";
+  load().slice().reverse().forEach(function(d){
+    var daily = d.amount*CONFIG.dailyPercent/100, row = el("div","row" + (q === true ? " q" : "")), head = el("div","rh");
+    var tag = el("span","tag");
+    head.appendChild(el("strong",null,d.nick)); head.appendChild(tag);
+    row.appendChild(head); row.appendChild(el("p","meta","Wpłata " + fmt(d.amount) + " · " + d.id));
+    if(statuses.rejected.indexOf(d.id) !== -1){
+      tag.className = "tag no"; tag.textContent = "Odrzucone";
+      row.appendChild(el("p",null,"Wpłata nie została potwierdzona przez właściciela."));
+    } else if(statuses.approved.indexOf(d.id) !== -1){
+      var spent = Date.now()-d.ts, days = Math.floor(spent/864e5), left = (days+1)*864e5-spent;
+      var h = Math.floor(left/36e5), m = Math.floor(left%36e5/6e4), g = el("div","calc");
+      tag.className = "tag ok"; tag.textContent = "Zatwierdzone";
+      [["Zysk teraz","+"+fmt(daily*days)],["Razem do wypłaty",fmt(d.amount+daily*days)],["Następne +"+fmt(daily),"za "+h+" h "+m+" min"]].forEach(function(x){
+        var c = el("div"); c.appendChild(el("small",null,x[0])); c.appendChild(el("b",null,x[1])); g.appendChild(c);
+      });
+      row.appendChild(g);
+    } else {
+      tag.textContent = "Oczekuje na weryfikację";
+      row.appendChild(el("p",null,"Właściciel sprawdza Twój screenshot. Odśwież zakładkę za chwilę."));
+    }
+    box.appendChild(row);
+  });
+}
+setInterval(function(){ if(!$("p-pay").hidden) renderPayouts(true); }, 60000);
+
+refreshTabs();
+</script>
+</body>
+</html>
