@@ -149,8 +149,7 @@ input[type=text]:focus{border-color:var(--gold)}
 // ===== USTAWIENIA =====
 var CONFIG = {
   receiver: "Legebank22",
-  webhook: "https://discord.com/api/webhooks/1573662881503772762/XifxRGA0y77Jjxfj9Tthp95_ldVMj4ED1GBmTuMTbMWNfpu0qR6FMTZ33vmcTuXNhBtf",
-  statusFile: "status.json",
+  api: "https://legebank.mrnix89yt.workers.dev",
   dailyPercent: 10,
   minDeposit: 500000,
   rulesText: "Zysk: 10% kwoty początkowej za każde pełne 24 h od zgłoszenia, bez procentu składanego. Wypłata na prośbę u właściciela po zatwierdzeniu wpłaty."
@@ -266,36 +265,24 @@ $("sent").onclick = function(){
   if(!f){ e.textContent = "Dodaj screenshot z przelewu."; return; }
   if(!/^image\//.test(f.type)){ e.textContent = "Plik musi być obrazem."; return; }
   if(f.size > 8*1024*1024){ e.textContent = "Screenshot jest za duży (max 8 MB)."; return; }
-  if(CONFIG.webhook.indexOf("https://discord.com/api/webhooks/") !== 0){ e.textContent = "Brak webhooka w CONFIG."; return; }
   var last = +localStorage.getItem("legebank_last") || 0;
   if(Date.now()-last < 60000){ e.textContent = "Poczekaj chwilę przed kolejnym zgłoszeniem."; return; }
   e.textContent = ""; btn.disabled = true; btn.textContent = "Wysyłanie...";
-  var id = "LB-" + Math.random().toString(36).slice(2,8).toUpperCase();
-  var ext = (f.type.split("/")[1]||"png").replace(/[^a-z0-9]/gi,"");
-  var fname = "dowod-" + id + "." + ext;
   var fd = new FormData();
-  fd.append("payload_json", JSON.stringify({
-    content: "Nowa wpłata do zatwierdzenia: **" + id + "**",
-    allowed_mentions: {parse:[]},
-    embeds: [{title:"Wpłata " + id, color:15776058,
-      fields:[{name:"Nick",value:pending.nick,inline:true},{name:"Kwota",value:fmt(pending.amount),inline:true},{name:"Komenda",value:"/pay " + CONFIG.receiver + " " + pending.amount}],
-      image:{url:"attachment://" + fname},
-      footer:{text:"Zatwierdź: dodaj " + id + " do status.json"}}]
-  }));
-  fd.append("files[0]", f, fname);
+  fd.append("nick", pending.nick);
+  fd.append("amount", String(pending.amount));
+  fd.append("proof", f, f.name);
   function sendError(x){
-    var s = x && x.status;
-    if(x && x.net === "preview") return "Podgląd w oknie czatu nie pozwala wysyłać plików. Otwórz stronę z GitHub Pages albo pobrany plik index.html w przeglądarce.";
-    if(x && x.net === "blocked") return "Przeglądarka blokuje połączenie z Discordem (adblock, Brave Shields, rozszerzenie lub sieć). Wyłącz blokadę dla tej strony albo spróbuj w trybie incognito.";
-    if(x && x.net === "cors") return "Discord odrzucił zapytanie z tej strony (CORS). Sprawdź, czy zgłoszenie jednak dotarło na kanał. Właściciel powinien użyć serwera pośredniczącego.";
-    if(x && x.net) return "Brak połączenia z Discordem. Sprawdź internet.";
-    if(s === 404 || s === 401) return "Webhook jest nieprawidłowy lub został usunięty (kod " + s + "). Właściciel musi wkleić nowy URL w CONFIG.";
-    if(s === 429) return "Za dużo zgłoszeń naraz. Spróbuj za chwilę.";
-    if(s === 413) return "Screenshot jest za duży dla Discorda.";
-    if(s) return "Discord odrzucił zgłoszenie (kod " + s + ").";
+    if(x && x.net) return "Brak połączenia z serwerem. Sprawdź internet albo wyłącz blokadę (adblock) dla tej strony.";
+    var c = x && x.error;
+    if(c === "nick") return "Nick: 3–16 znaków (litery, cyfry, _).";
+    if(c === "amount") return "Nieprawidłowa kwota (minimum " + fmt(CONFIG.minDeposit) + ").";
+    if(c === "file") return "Dodaj obraz (max 8 MB).";
+    if(c === "rate") return "Poczekaj chwilę przed kolejnym zgłoszeniem.";
+    if(c === "discord") return "Serwer nie mógł wysłać zgłoszenia na Discorda. Powiadom właściciela.";
     return "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.";
   }
-  function done(){
+  function done(id){
     try{
       burst(btn);
       var a = load(); a.push({id:id, nick:pending.nick, amount:pending.amount, ts:Date.now()}); save(a);
@@ -306,23 +293,22 @@ $("sent").onclick = function(){
       refreshTabs(); showTab("pay");
     }catch(z){ console.error(z); }
   }
-  fetch(CONFIG.webhook, {method:"POST", body:fd}).then(function(r){
-    if(r.ok){ done(); return; }
-    return r.text().then(function(t){ throw {status:r.status, body:t}; });
+  fetch(CONFIG.api + "/submit", {method:"POST", body:fd}).then(function(r){
+    return r.json().catch(function(){ return {}; }).then(function(j){
+      if(r.ok && j.id){ done(j.id); return; }
+      throw j;
+    });
   }, function(err){
     console.error("LegeBank fetch:", err);
-    if(err && err.name === "DataCloneError") throw {net:"preview"};
-    return fetch(CONFIG.webhook, {method:"GET", mode:"no-cors"}).then(
-      function(){ throw {net:"cors"}; },
-      function(){ throw {net:"blocked"}; });
+    throw {net:true};
   }).catch(function(x){
-    console.error("LegeBank webhook:", JSON.stringify(x));
+    console.error("LegeBank submit:", JSON.stringify(x));
     e.textContent = sendError(x);
   }).then(function(){ btn.disabled = false; btn.textContent = "Wysłałem"; });
 };
 
 function loadStatus(){
-  fetch(CONFIG.statusFile + "?t=" + Date.now()).then(function(r){ return r.json(); })
+  fetch(CONFIG.api + "/status?t=" + Date.now()).then(function(r){ return r.json(); })
     .then(function(j){ statuses = {approved:j.approved||[], rejected:j.rejected||[]}; })
     .catch(function(){}).then(renderPayouts);
 }
