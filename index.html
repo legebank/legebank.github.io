@@ -85,6 +85,31 @@ button:focus-visible,input:focus-visible,.drop:focus-within{outline:3px solid va
 input[type=text]:focus{border-color:var(--gold)}
 .chips button:active{transform:translateY(2px)}
 [hidden]{display:none!important}
+.lb{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center}
+.lb .rank{font:400 12px var(--px);color:var(--mute);text-align:center}
+.lb.r1{border-color:var(--gold)}.lb.r1 .rank{color:var(--gold)}
+.lb.r2 .rank{color:#d7e3ea}.lb.r3 .rank{color:#d98a4a}
+.lb strong{font-size:16px;word-break:break-all}
+.lb .meta{margin:0}
+.gain{text-align:right}.gain b{display:block;color:var(--ok);font-size:16px}.gain small{color:var(--mute);font-size:12px}
+.adm-fab{position:fixed;right:16px;bottom:16px;z-index:60;padding:10px 14px;background:var(--panel);color:var(--gold);border:2px solid var(--gold);border-radius:4px;box-shadow:4px 4px 0 rgba(0,0,0,.4);font:700 14px var(--body);cursor:pointer}
+.adm-fab:hover{filter:brightness(1.15)}
+.adm{position:fixed;right:16px;bottom:68px;z-index:60;width:min(400px,calc(100vw - 32px));max-height:min(70vh,560px);overflow:auto;padding:16px}
+.adm input[type=password]{width:100%;padding:12px 14px;margin:0 0 6px;background:var(--bg);border:2px solid var(--line);border-radius:4px;color:var(--text);font:500 17px var(--body)}
+.adm input[type=password]:focus{border-color:var(--gold)}
+.adm-x{background:none;border:0;color:var(--mute);font:400 24px/1 var(--body);cursor:pointer;padding:0 4px}
+.adm-tools{display:flex;justify-content:space-between}.adm-tools .link{padding:0 0 10px}
+.adm .row{padding:10px}.adm .meta{margin:2px 0 0}
+.adm-link{display:inline-block;margin-top:6px;color:var(--gold);font-size:13px}
+.adm-tabs{display:flex;gap:8px;margin:0 0 12px}
+.adm-tabs button{flex:1;padding:8px;background:var(--bg);border:2px solid var(--line);border-radius:4px;color:var(--mute);font:500 14px var(--body);cursor:pointer}
+.adm-tabs button.on{color:var(--gold);border-color:var(--gold)}
+.adm-del{background:none;border:0;color:var(--no);font:500 13px var(--body);text-decoration:underline;cursor:pointer;padding:0}
+#r-add{margin:6px 0 14px}
+.adm-act{display:flex;gap:8px;margin-top:10px}
+.adm-act button{flex:1;padding:8px;border:2px solid var(--line);border-radius:4px;background:var(--panel);color:var(--text);font:700 14px var(--body);cursor:pointer}
+.adm-act .ok{border-color:var(--ok);color:var(--ok)}.adm-act .no{border-color:var(--no);color:var(--no)}
+.adm-act button:disabled{opacity:.5;cursor:wait}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -107,6 +132,7 @@ input[type=text]:focus{border-color:var(--gold)}
   <section class="card">
     <div class="tabs">
       <button class="on" id="t-dep" type="button">Wpłata</button>
+      <button id="t-top" type="button">Ranking</button>
       <button id="t-pay" type="button" hidden>Wypłaty</button>
     </div>
 
@@ -140,10 +166,38 @@ input[type=text]:focus{border-color:var(--gold)}
       </div>
     </div>
 
+    <div class="pane" id="p-top" hidden><p class="help" id="top-sum"></p><div id="top"></div></div>
+
     <div class="pane" id="p-pay" hidden><div id="list"></div></div>
   </section>
 </div>
 </div>
+
+<button class="adm-fab" id="adm-fab" type="button" aria-haspopup="dialog" aria-expanded="false">⚙ Admin</button>
+<aside class="card adm" id="adm" role="dialog" aria-label="Panel administratora" hidden>
+  <div class="rh"><strong>Panel administratora</strong><button class="adm-x" id="adm-x" type="button" aria-label="Zamknij">×</button></div>
+  <p class="err" id="adm-err" role="alert"></p>
+  <div id="adm-login">
+    <label for="adm-token">Token administratora</label>
+    <input id="adm-token" type="password" autocomplete="off">
+    <button class="btn" id="adm-go" type="button">Zaloguj</button>
+  </div>
+  <div id="adm-main" hidden>
+    <div class="adm-tabs"><button class="on" id="adm-t1" type="button">Wpłaty</button><button id="adm-t2" type="button">Ranking</button></div>
+    <div class="adm-tools"><button class="link" id="adm-ref" type="button">Odśwież</button><button class="link" id="adm-out" type="button">Wyloguj</button></div>
+    <div id="adm-list"></div>
+    <div id="adm-rank" hidden>
+      <label for="r-nick">Nick</label>
+      <input id="r-nick" type="text" maxlength="16" autocomplete="off" placeholder="np. Steve123">
+      <label for="r-amt">Kasa</label>
+      <input id="r-amt" type="text" autocomplete="off" placeholder="np. 2m">
+      <label for="r-pct">Procent jutro</label>
+      <input id="r-pct" type="text" inputmode="decimal" autocomplete="off" placeholder="puste = domyślne">
+      <button class="btn" id="r-add" type="button">Dodaj do rankingu</button>
+      <div id="r-list"></div>
+    </div>
+  </div>
+</aside>
 
 <script>
 // ===== USTAWIENIA =====
@@ -152,6 +206,7 @@ var CONFIG = {
   api: "https://legebank.mrnix89yt.workers.dev",
   dailyPercent: 10,
   minDeposit: 500000,
+  topSize: 10,
   rulesText: "Zysk: 10% kwoty początkowej za każde pełne 24 h od zgłoszenia, bez procentu składanego. Wypłata na prośbę u właściciela po zatwierdzeniu wpłaty."
 };
 // ======================
@@ -208,13 +263,16 @@ $("minhelp").textContent = "Minimalna wpłata: " + fmt(CONFIG.minDeposit) + ". S
 })();
 
 function showTab(w){
-  $("p-dep").hidden = w !== "dep"; $("p-pay").hidden = w !== "pay";
-  $("t-dep").className = w === "dep" ? "on" : ""; $("t-pay").className = w === "pay" ? "on" : "";
+  ["dep","top","pay"].forEach(function(k){
+    $("p-"+k).hidden = w !== k; $("t-"+k).className = w === k ? "on" : "";
+  });
   if(w === "pay") loadStatus();
+  if(w === "top") loadTop();
 }
 function refreshTabs(){ $("t-pay").hidden = load().length === 0; }
 $("t-dep").onclick = function(){showTab("dep")};
 $("t-pay").onclick = function(){showTab("pay")};
+$("t-top").onclick = function(){showTab("top")};
 
 function renderCalc(){
   var v = parseAmount($("amt").value), box = $("calc"); box.textContent = "";
@@ -339,6 +397,161 @@ function renderPayouts(q){
   });
 }
 setInterval(function(){ if(!$("p-pay").hidden) renderPayouts(true); }, 60000);
+
+// ===== RANKING WPŁAT =====
+// Serwer: GET /leaderboard -> {"players":[{"nick":"Steve","total":2000000,"percent":10}, ...]} ("percent" opcjonalne, domyślnie CONFIG.dailyPercent)
+var topData = null;
+function renderTop(state, quiet){
+  var box = $("top"), sum = $("top-sum"); box.textContent = ""; sum.textContent = "";
+  if(state === "load"){ box.appendChild(el("p","empty","Ładowanie rankingu...")); return; }
+  if(state === "err"){ box.appendChild(el("p","err","Nie udało się pobrać rankingu. Spróbuj ponownie za chwilę.")); return; }
+  if(!topData || !topData.length){ box.appendChild(el("p","empty","Na razie nikt nie ma zatwierdzonej wpłaty.")); return; }
+  var all = topData.reduce(function(a,p){ return a + p.total; }, 0);
+  sum.textContent = "Łącznie wpłacono: " + fmt(all) + " · graczy: " + topData.length;
+  topData.slice(0, CONFIG.topSize).forEach(function(p,i){
+    var row = el("div","row lb" + (i<3 ? " r"+(i+1) : "") + (quiet ? " q" : "")), who = el("div"), g = el("div","gain");
+    row.appendChild(el("span","rank",String(i+1)));
+    who.appendChild(el("strong",null,p.nick)); who.appendChild(el("p","meta","Wpłacił: " + fmt(p.total)));
+    g.appendChild(el("b",null,"+" + p.percent + "% jutro")); g.appendChild(el("small","","+" + fmt(p.total*p.percent/100)));
+    row.appendChild(who); row.appendChild(g); box.appendChild(row);
+  });
+}
+function loadTop(q){
+  var quiet = !!q || !!topData;
+  renderTop(topData ? "" : "load", quiet);
+  fetch(CONFIG.api + "/leaderboard?t=" + Date.now()).then(function(r){
+    if(!r.ok) throw r.status;
+    return r.json();
+  }).then(function(j){
+    topData = (j.players || []).filter(function(p){ return p && p.nick && +p.total > 0; })
+      .map(function(p){ return {nick:String(p.nick), total:+p.total, percent:(p.percent != null && isFinite(+p.percent)) ? +p.percent : CONFIG.dailyPercent}; })
+      .sort(function(a,b){ return b.total - a.total; });
+    renderTop("", quiet);
+  }).catch(function(){ if(!topData) renderTop("err"); });
+}
+setInterval(function(){ if(!$("p-top").hidden) loadTop(true); }, 60000);
+
+// ===== PANEL ADMINISTRATORA =====
+// Serwer (token sprawdzany po stronie workera, nie w tym pliku):
+//   GET  /admin/deposits -> {"deposits":[{"id","nick","amount","ts","status":"pending|approved|rejected","proof":"https://..."}]}
+//   POST /admin/decide   -> body {"id":"...","action":"approve|reject"}
+//   GET  /admin/ranking  -> {"entries":[{"nick","total","percent"}]}  (ręczne wpisy do rankingu)
+//   POST /admin/ranking  -> body {"action":"set","nick","total","percent"} albo {"action":"delete","nick"}
+// Oba z nagłówkiem Authorization: Bearer <token>; 401/403 = zły token.
+var ADM = {token:null};
+try{ ADM.token = sessionStorage.getItem("legebank_adm"); }catch(e){}
+function admMsg(t){ $("adm-err").textContent = t || ""; }
+function admShow(on){ $("adm-login").hidden = on; $("adm-main").hidden = !on; }
+function admOut(msg){
+  ADM.token = null; try{ sessionStorage.removeItem("legebank_adm"); }catch(e){}
+  $("adm-list").textContent = ""; $("r-list").textContent = ""; admTab(0); admShow(false); admMsg(msg);
+}
+function admErr(x){ if(x === "auth") return; admMsg(x === "net" ? "Brak połączenia z serwerem." : "Błąd serwera (" + x + ")."); }
+function admApi(path, body){
+  var h = {"Authorization":"Bearer " + ADM.token}, o = {headers:h};
+  if(body){ o.method = "POST"; h["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
+  return fetch(CONFIG.api + path, o).then(function(r){
+    if(r.status === 401 || r.status === 403){ admOut("Serwer odrzucił token."); throw "auth"; }
+    if(!r.ok) throw r.status;
+    return r.json();
+  }, function(){ throw "net"; });
+}
+function renderAdm(list){
+  var box = $("adm-list"); box.textContent = "";
+  if(!list.length){ box.appendChild(el("p","empty","Brak zgłoszeń.")); return; }
+  list.forEach(function(d){
+    var row = el("div","row q"), head = el("div","rh"), tag = el("span","tag"), act = el("div","adm-act");
+    head.appendChild(el("strong",null,String(d.nick))); head.appendChild(tag); row.appendChild(head);
+    row.appendChild(el("p","meta", fmt(d.amount) + " · " + d.id + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
+    if(typeof d.proof === "string" && /^https:\/\//.test(d.proof)){
+      var a = el("a","adm-link","Zobacz screenshot"); a.href = d.proof; a.target = "_blank"; a.rel = "noopener noreferrer"; row.appendChild(a);
+    }
+    if(d.status === "approved"){ tag.className = "tag ok"; tag.textContent = "Zatwierdzone"; }
+    else if(d.status === "rejected"){ tag.className = "tag no"; tag.textContent = "Odrzucone"; }
+    else {
+      tag.textContent = "Oczekuje";
+      [["approve","Zatwierdź","ok"],["reject","Odrzuć","no"]].forEach(function(x){
+        var b = el("button",x[2],x[1]); b.type = "button";
+        b.onclick = function(){ admDecide(d.id, x[0], act); };
+        act.appendChild(b);
+      });
+      row.appendChild(act);
+    }
+    box.appendChild(row);
+  });
+}
+function admLoad(){
+  admMsg("");
+  admApi("/admin/deposits").then(function(j){
+    renderAdm((j.deposits || []).slice().sort(function(a,b){
+      return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) || (b.ts || 0) - (a.ts || 0);
+    }).slice(0, 40));
+  }).catch(admErr);
+}
+function admDecide(id, action, act){
+  var bs = act.querySelectorAll("button"), i;
+  for(i=0;i<bs.length;i++) bs[i].disabled = true;
+  admApi("/admin/decide", {id:id, action:action}).then(function(){
+    topData = null; admLoad(); if(!$("p-top").hidden) loadTop();
+  }).catch(function(x){ for(var n=0;n<bs.length;n++) bs[n].disabled = false; admErr(x); });
+}
+$("adm-fab").onclick = function(){
+  var open = $("adm").hidden; $("adm").hidden = !open; this.setAttribute("aria-expanded", String(open));
+  if(!open) return;
+  if(ADM.token){ admShow(true); admTab(1); } else { admShow(false); $("adm-token").focus(); }
+};
+$("adm-x").onclick = function(){ $("adm").hidden = true; $("adm-fab").setAttribute("aria-expanded","false"); };
+$("adm-go").onclick = function(){
+  var t = $("adm-token").value.trim();
+  if(!t){ admMsg("Wpisz token."); return; }
+  ADM.token = t; try{ sessionStorage.setItem("legebank_adm", t); }catch(e){}
+  $("adm-token").value = ""; admShow(true); admTab(1);
+};
+$("adm-token").onkeydown = function(e){ if(e.key === "Enter") $("adm-go").onclick(); };
+function admTab(n){ // 0 = tylko reset widoku, 1 = wpłaty, 2 = ranking
+  $("adm-list").hidden = n === 2; $("adm-rank").hidden = n !== 2;
+  $("adm-t1").className = n === 2 ? "" : "on"; $("adm-t2").className = n === 2 ? "on" : "";
+  if(n === 1) admLoad(); else if(n === 2) rankLoad();
+}
+function rankLoad(){
+  admMsg("");
+  admApi("/admin/ranking").then(function(j){ renderRank(j.entries || []); }).catch(admErr);
+}
+function renderRank(list){
+  var box = $("r-list"); box.textContent = "";
+  if(!list.length){ box.appendChild(el("p","empty","Brak ręcznych wpisów.")); return; }
+  list.forEach(function(d){
+    var row = el("div","row q"), head = el("div","rh"), b = el("button","adm-del","Usuń");
+    b.type = "button";
+    head.appendChild(el("strong",null,String(d.nick))); head.appendChild(b); row.appendChild(head);
+    row.appendChild(el("p","meta", fmt(d.total) + " · +" + d.percent + "% jutro"));
+    b.onclick = function(){
+      b.disabled = true;
+      admApi("/admin/ranking", {action:"delete", nick:d.nick}).then(function(){
+        topData = null; rankLoad(); if(!$("p-top").hidden) loadTop();
+      }).catch(function(x){ b.disabled = false; admErr(x); });
+    };
+    box.appendChild(row);
+  });
+}
+$("r-add").onclick = function(){
+  var nick = $("r-nick").value.trim(), amt = parseAmount($("r-amt").value);
+  var ps = $("r-pct").value.trim().replace("%","").replace(",","."), pct = ps === "" ? CONFIG.dailyPercent : parseFloat(ps), b = this;
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(nick)){ admMsg("Nick: 3–16 znaków (litery, cyfry, _)."); return; }
+  if(!(amt>0)){ admMsg("Podaj poprawną kasę, np. 500k lub 2m."); return; }
+  if(!(pct>=0 && pct<=1000)){ admMsg("Procent: liczba od 0 do 1000."); return; }
+  b.disabled = true; admMsg("");
+  admApi("/admin/ranking", {action:"set", nick:nick, total:amt, percent:pct}).then(function(){
+    $("r-nick").value = ""; $("r-amt").value = ""; $("r-pct").value = "";
+    topData = null; rankLoad(); if(!$("p-top").hidden) loadTop();
+  }).catch(admErr).then(function(){ b.disabled = false; });
+};
+$("adm-t1").onclick = function(){ admTab(1); };
+$("adm-t2").onclick = function(){ admTab(2); };
+$("adm-ref").onclick = function(){ admTab($("adm-rank").hidden ? 1 : 2); };
+$("adm-out").onclick = function(){ admOut(""); };
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !$("adm").hidden) $("adm-x").onclick(); });
+
 
 refreshTabs();
 </script>
