@@ -141,7 +141,7 @@ input[type=text]{border-radius:8px;transition:.2s}input[type=text]:focus{box-sha
 .foot{text-align:center;color:var(--mute);font-size:12px;margin:40px auto 0;max-width:60ch}
 .adm{backdrop-filter:blur(8px);border-radius:12px}
 @media(max-width:520px){.stats{grid-template-columns:1fr}}
-.adm{width:min(540px,calc(100vw - 32px))}.adm h3{margin:16px 0 8px;font:500 15px var(--body);color:var(--gold)}
+.adm{width:min(540px,calc(100vw - 32px));max-height:min(80vh,640px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.adm h3{margin:16px 0 8px;font:500 15px var(--body);color:var(--gold)}
 .tb{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:8px 10px;align-items:center;font-size:13px;word-break:break-all}
 .tb .th{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--line);padding-bottom:4px}
 .tb .tag{white-space:nowrap}
