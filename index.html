@@ -111,6 +111,9 @@ input[type=text]:focus{border-color:var(--gold)}
 .adm-act .ok{border-color:var(--ok);color:var(--ok)}.adm-act .no{border-color:var(--no);color:var(--no)}
 .adm-act button:disabled{opacity:.5;cursor:wait}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.st{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 14px}.st div{background:var(--bg);border:2px solid var(--line);border-radius:4px;padding:10px}.st small{display:block;color:var(--mute);font-size:12px}.st b{color:var(--ok);word-break:break-word}
+.chat{max-height:240px;overflow:auto;display:grid;gap:6px;margin:0 0 10px}.msg{padding:8px 10px;border-radius:4px;background:var(--bg);border:2px solid var(--line);font-size:14px;word-break:break-word}.msg.me{border-color:var(--gold);justify-self:end}.msg small{display:block;color:var(--mute);font-size:11px}
+.pane h3{margin:18px 0 8px;font:500 16px var(--body);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -134,6 +137,7 @@ input[type=text]:focus{border-color:var(--gold)}
       <button class="on" id="t-dep" type="button">Wpłata</button>
       <button id="t-top" type="button">Ranking</button>
       <button id="t-pay" type="button" hidden>Wypłaty</button>
+      <button id="t-me" type="button" hidden>Mój panel</button>
     </div>
 
     <div class="pane" id="p-dep">
@@ -159,7 +163,7 @@ input[type=text]:focus{border-color:var(--gold)}
         <p class="lab">2. Dodaj screenshot z przelewu</p>
         <label class="drop" for="proof"><img id="thumb" alt="" hidden><span id="fname">Kliknij lub upuść obraz (max 8 MB)</span></label>
         <input class="sr" id="proof" type="file" accept="image/*">
-        <p class="help">Na screenie musi być widoczny przelew. Właściciel sprawdza każdą wpłatę.</p>
+        <p class="help">Na screenie musi być widoczny przelew. Właściciel sprawdza każdą wpłatę. Przy wpłacie zapisujemy Twój nick i adres IP (ochrona przed multikontami i nadużyciami); wysyłając zgłoszenie, zgadzasz się na to.</p>
         <p class="err" id="err2" role="alert"></p>
         <button class="btn" id="sent" type="button">Wysłałem</button>
         <button class="link" id="back" type="button">Wróć i zmień dane</button>
@@ -169,6 +173,17 @@ input[type=text]:focus{border-color:var(--gold)}
     <div class="pane" id="p-top" hidden><p class="help" id="top-sum"></p><div id="top"></div></div>
 
     <div class="pane" id="p-pay" hidden><div id="list"></div></div>
+
+    <div class="pane" id="p-me" hidden>
+      <p class="help" id="me-who"></p>
+      <div class="st" id="me-st"></div>
+      <p class="help">Prognoza liczona wg regulaminu (10% kwoty początkowej za pełne 24 h) – to nie jest gwarancja wypłaty.</p>
+      <h3>Support</h3>
+      <div class="chat" id="chat"></div>
+      <input id="chat-in" type="text" maxlength="500" autocomplete="off" placeholder="Napisz do właściciela...">
+      <p class="err" id="chat-err" role="alert"></p>
+      <button class="btn" id="chat-go" type="button">Wyślij</button>
+    </div>
   </section>
 </div>
 </div>
@@ -183,9 +198,10 @@ input[type=text]:focus{border-color:var(--gold)}
     <button class="btn" id="adm-go" type="button">Zaloguj</button>
   </div>
   <div id="adm-main" hidden>
-    <div class="adm-tabs"><button class="on" id="adm-t1" type="button">Wpłaty</button><button id="adm-t2" type="button">Ranking</button></div>
+    <div class="adm-tabs"><button class="on" id="adm-t1" type="button">Wpłaty</button><button id="adm-t2" type="button">Ranking</button><button id="adm-t3" type="button">Blacklista</button><button id="adm-t4" type="button">Support</button></div>
     <div class="adm-tools"><button class="link" id="adm-ref" type="button">Odśwież</button><button class="link" id="adm-out" type="button">Wyloguj</button></div>
     <div id="adm-list"></div>
+    <div id="adm-bl" hidden></div><div id="adm-sup" hidden></div>
     <div id="adm-rank" hidden>
       <label for="r-nick">Nick</label>
       <input id="r-nick" type="text" maxlength="16" autocomplete="off" placeholder="np. Steve123">
@@ -212,6 +228,7 @@ var CONFIG = {
 // ======================
 
 var $ = function(id){return document.getElementById(id)};
+var TOK = null; try{ TOK = localStorage.getItem("legebank_tok"); }catch(e){}
 var KEY = "legebank_deposits", pending = null, thumbURL = null;
 var statuses = {approved:[], rejected:[]};
 var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -263,13 +280,15 @@ $("minhelp").textContent = "Minimalna wpłata: " + fmt(CONFIG.minDeposit) + ". S
 })();
 
 function showTab(w){
-  ["dep","top","pay"].forEach(function(k){
+  ["dep","top","pay","me"].forEach(function(k){
     $("p-"+k).hidden = w !== k; $("t-"+k).className = w === k ? "on" : "";
   });
   if(w === "pay") loadStatus();
+  if(w === "me") meLoad();
   if(w === "top") loadTop();
 }
-function refreshTabs(){ $("t-pay").hidden = load().length === 0; }
+function refreshTabs(){ $("t-pay").hidden = load().length === 0; $("t-me").hidden = !TOK; }
+$("t-me").onclick = function(){showTab("me")};
 $("t-dep").onclick = function(){showTab("dep")};
 $("t-pay").onclick = function(){showTab("pay")};
 $("t-top").onclick = function(){showTab("top")};
@@ -336,12 +355,14 @@ $("sent").onclick = function(){
     if(c === "nick") return "Nick: 3–16 znaków (litery, cyfry, _).";
     if(c === "amount") return "Nieprawidłowa kwota (minimum " + fmt(CONFIG.minDeposit) + ").";
     if(c === "file") return "Dodaj obraz (max 8 MB).";
+    if(c === "banned") return "Twoje konto lub adres IP jest zablokowane.";
     if(c === "rate") return "Poczekaj chwilę przed kolejnym zgłoszeniem.";
     if(c === "discord") return "Serwer nie mógł wysłać zgłoszenia na Discorda. Powiadom właściciela.";
     return "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.";
   }
-  function done(id){
+  function done(id, tok){
     try{
+      if(tok){ TOK = tok; try{ localStorage.setItem("legebank_tok", tok); }catch(z){} }
       burst(btn);
       var a = load(); a.push({id:id, nick:pending.nick, amount:pending.amount, ts:Date.now()}); save(a);
       try{ localStorage.setItem("legebank_last", String(Date.now())); }catch(z){}
@@ -353,7 +374,7 @@ $("sent").onclick = function(){
   }
   fetch(CONFIG.api + "/submit", {method:"POST", body:fd}).then(function(r){
     return r.json().catch(function(){ return {}; }).then(function(j){
-      if(r.ok && j.id){ done(j.id); return; }
+      if(r.ok && j.id){ done(j.id, j.token); return; }
       throw j;
     });
   }, function(err){
@@ -462,7 +483,8 @@ function renderAdm(list){
   list.forEach(function(d){
     var row = el("div","row q"), head = el("div","rh"), tag = el("span","tag"), act = el("div","adm-act");
     head.appendChild(el("strong",null,String(d.nick))); head.appendChild(tag); row.appendChild(head);
-    row.appendChild(el("p","meta", fmt(d.amount) + " · " + d.id + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
+    row.appendChild(el("p","meta", fmt(d.amount) + " · " + d.id + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "") + (d.ip ? " · IP " + d.ip : "")));
+    if(d.ip){ var bb = el("button","adm-del","Blacklist (IP + nick)"); bb.type = "button"; bb.onclick = function(){ if(confirm("Zablokować " + d.nick + " i IP " + d.ip + "?")) admApi("/admin/blacklist",{action:"add",ip:d.ip,nick:d.nick}).then(function(){ bb.textContent = "Zablokowano"; bb.disabled = true; }).catch(admErr); }; row.appendChild(bb); }
     if(typeof d.proof === "string" && /^https:\/\//.test(d.proof)){
       var a = el("a","adm-link","Zobacz screenshot"); a.href = d.proof; a.target = "_blank"; a.rel = "noopener noreferrer"; row.appendChild(a);
     }
@@ -508,10 +530,39 @@ $("adm-go").onclick = function(){
   $("adm-token").value = ""; admShow(true); admTab(1);
 };
 $("adm-token").onkeydown = function(e){ if(e.key === "Enter") $("adm-go").onclick(); };
-function admTab(n){ // 0 = tylko reset widoku, 1 = wpłaty, 2 = ranking
-  $("adm-list").hidden = n === 2; $("adm-rank").hidden = n !== 2;
-  $("adm-t1").className = n === 2 ? "" : "on"; $("adm-t2").className = n === 2 ? "on" : "";
-  if(n === 1) admLoad(); else if(n === 2) rankLoad();
+function admTab(n){ // 0 = reset, 1 wpłaty, 2 ranking, 3 blacklista, 4 support
+  admCur = n;
+  $("adm-list").hidden = n !== 1 && n !== 0; $("adm-rank").hidden = n !== 2; $("adm-bl").hidden = n !== 3; $("adm-sup").hidden = n !== 4;
+  for(var i=1;i<=4;i++) $("adm-t"+i).className = (n === i || (n === 0 && i === 1)) ? "on" : "";
+  if(n === 1) admLoad(); else if(n === 2) rankLoad(); else if(n === 3) blLoad(); else if(n === 4) supLoad();
+}
+var admCur = 1;
+function blLoad(){
+  admMsg(""); admApi("/admin/blacklist").then(function(j){
+    var box = $("adm-bl"); box.textContent = "";
+    if(!(j.entries||[]).length){ box.appendChild(el("p","empty","Blacklista jest pusta.")); return; }
+    j.entries.forEach(function(d){
+      var row = el("div","row q"), h = el("div","rh"), b = el("button","adm-del","Odblokuj"); b.type = "button";
+      h.appendChild(el("strong",null,String(d.nick||"—"))); h.appendChild(b); row.appendChild(h);
+      row.appendChild(el("p","meta","IP " + d.ip + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
+      b.onclick = function(){ b.disabled = true; admApi("/admin/blacklist",{action:"remove",ip:d.ip,nick:d.nick}).then(blLoad).catch(admErr); };
+      box.appendChild(row);
+    });
+  }).catch(admErr);
+}
+function supLoad(){
+  admMsg(""); admApi("/admin/support").then(function(j){
+    var box = $("adm-sup"); box.textContent = "";
+    if(!(j.threads||[]).length){ box.appendChild(el("p","empty","Brak wiadomości.")); return; }
+    j.threads.forEach(function(t){
+      var row = el("div","row q"), chat = el("div","chat"), inp = el("input"), b = el("button","adm-del","Odpowiedz");
+      row.appendChild(el("strong",null,String(t.nick)));
+      (t.messages||[]).forEach(function(m){ var x = el("div","msg" + (m.from === "admin" ? " me" : ""), m.text); chat.appendChild(x); });
+      inp.type = "text"; inp.maxLength = 500; inp.placeholder = "Odpowiedź..."; b.type = "button";
+      b.onclick = function(){ if(!inp.value.trim()) return; b.disabled = true; admApi("/admin/support",{nick:t.nick,text:inp.value.trim()}).then(supLoad).catch(function(x){ b.disabled = false; admErr(x); }); };
+      row.appendChild(chat); row.appendChild(inp); row.appendChild(b); box.appendChild(row);
+    });
+  }).catch(admErr);
 }
 function rankLoad(){
   admMsg("");
@@ -548,10 +599,51 @@ $("r-add").onclick = function(){
 };
 $("adm-t1").onclick = function(){ admTab(1); };
 $("adm-t2").onclick = function(){ admTab(2); };
-$("adm-ref").onclick = function(){ admTab($("adm-rank").hidden ? 1 : 2); };
+$("adm-t3").onclick = function(){ admTab(3); };
+$("adm-t4").onclick = function(){ admTab(4); };
+$("adm-ref").onclick = function(){ admTab(admCur); };
 $("adm-out").onclick = function(){ admOut(""); };
 document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !$("adm").hidden) $("adm-x").onclick(); });
 
+
+// ===== PANEL GRACZA + SUPPORT (sesja = token zapisany w przeglądarce, wydany przy pierwszej wpłacie) =====
+function meApi(path, body){
+  var o = {headers:{"Authorization":"Bearer " + TOK}};
+  if(body){ o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
+  return fetch(CONFIG.api + path, o).then(function(r){
+    if(r.status === 403){ throw "banned"; }
+    if(r.status === 401){ TOK = null; try{ localStorage.removeItem("legebank_tok"); }catch(e){} refreshTabs(); showTab("dep"); throw "auth"; }
+    if(!r.ok) throw r.status; return r.json();
+  }, function(){ throw "net"; });
+}
+function meStats(){
+  fetch(CONFIG.api + "/status?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(j){ statuses = {approved:j.approved||[], rejected:j.rejected||[]}; }).catch(function(){}).then(function(){
+    var all = load(), ok = all.filter(function(d){ return statuses.approved.indexOf(d.id) !== -1; }), tot = 0, earned = 0, daily = 0, box = $("me-st");
+    ok.forEach(function(d){ var dd = d.amount*CONFIG.dailyPercent/100; tot += d.amount; daily += dd; earned += dd*Math.floor((Date.now()-d.ts)/864e5); });
+    $("me-who").textContent = all.length ? "Zalogowany jako " + all[all.length-1].nick : "";
+    box.textContent = "";
+    [["Łącznie wpłacono",fmt(tot)],["Zarobione do teraz","+"+fmt(earned)],["Zysk dziennie","+"+fmt(daily)],["Prognoza za 30 dni","+"+fmt(daily*30)],["Oczekujące wpłaty",String(all.filter(function(d){ return statuses.approved.indexOf(d.id) === -1 && statuses.rejected.indexOf(d.id) === -1; }).length)]].forEach(function(x){
+      var c = el("div"); c.appendChild(el("small",null,x[0])); c.appendChild(el("b",null,x[1])); box.appendChild(c);
+    });
+  });
+}
+function chatLoad(){
+  if(!TOK) return;
+  meApi("/me/support").then(function(j){
+    var box = $("chat"), stick = box.scrollTop + box.clientHeight >= box.scrollHeight - 20; box.textContent = "";
+    (j.messages||[]).forEach(function(m){ var x = el("div","msg" + (m.from === "user" ? " me" : ""), m.text); x.insertBefore(el("small",null,(m.from === "user" ? "Ty" : "Właściciel") + (m.ts ? " · " + new Date(m.ts).toLocaleString("pl-PL") : "")), x.firstChild); box.appendChild(x); });
+    if(stick) box.scrollTop = box.scrollHeight; $("chat-err").textContent = "";
+  }).catch(function(x){ if(x === "banned") $("chat-err").textContent = "Twoje konto lub adres IP jest zablokowane."; });
+}
+function meLoad(){ meStats(); chatLoad(); }
+$("chat-go").onclick = function(){
+  var t = $("chat-in").value.trim(), b = this; if(!t || !TOK) return;
+  b.disabled = true;
+  meApi("/me/support",{text:t}).then(function(){ $("chat-in").value = ""; chatLoad(); }).catch(function(x){ $("chat-err").textContent = x === "banned" ? "Twoje konto lub adres IP jest zablokowane." : "Nie udało się wysłać."; }).then(function(){ b.disabled = false; });
+};
+$("chat-in").onkeydown = function(e){ if(e.key === "Enter") $("chat-go").onclick(); };
+setInterval(function(){ if(!$("p-me").hidden) { chatLoad(); } }, 15000);
+if(TOK && load().length) showTab("me"); // stała sesja: gracz od razu widzi swój panel
 
 refreshTabs();
 </script>
