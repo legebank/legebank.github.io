@@ -114,6 +114,33 @@ input[type=text]:focus{border-color:var(--gold)}
 .st{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 14px}.st div{background:var(--bg);border:2px solid var(--line);border-radius:4px;padding:10px}.st small{display:block;color:var(--mute);font-size:12px}.st b{color:var(--ok);word-break:break-word}
 .chat{max-height:240px;overflow:auto;display:grid;gap:6px;margin:0 0 10px}.msg{padding:8px 10px;border-radius:4px;background:var(--bg);border:2px solid var(--line);font-size:14px;word-break:break-word}.msg.me{border-color:var(--gold);justify-self:end}.msg small{display:block;color:var(--mute);font-size:11px}
 .pane h3{margin:18px 0 8px;font:500 16px var(--body);color:var(--gold)}
+:root{--emerald:#3be28a;--deep:#07121a}
+body{background:radial-gradient(700px 420px at 85% -5%,rgba(244,185,59,.16),transparent 60%),radial-gradient(800px 500px at 5% 10%,rgba(59,226,138,.10),transparent 60%),linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px) 0 0/32px 32px,var(--deep)}
+.wrap{padding-top:28px}.logo{font-size:15px;letter-spacing:1px}.coin{animation:flip 3s ease-in-out infinite}
+.badge{background:rgba(244,185,59,.08);border-color:rgba(244,185,59,.35);color:var(--gold);border-radius:99px;padding:6px 14px}
+.big{background:linear-gradient(180deg,#ffe08a,#f4b93b 55%,#c98a10);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(4px 4px 0 #6b4300) drop-shadow(0 0 28px rgba(244,185,59,.35))}
+.sub{margin:24px 0 16px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.pills span{padding:6px 12px;border:2px solid rgba(59,226,138,.35);background:rgba(59,226,138,.07);color:var(--emerald);border-radius:99px;font-size:13px;font-weight:500}
+.steps li{background:rgba(255,255,255,.03);border:2px solid var(--line);border-radius:8px;padding:10px 12px;align-items:center;transition:.2s}
+.steps li:hover{border-color:var(--gold);transform:translateX(4px)}
+.steps li::before{background:var(--gold);color:#2a1c00;border-color:var(--gold-d)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}
+.stats div{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:2px solid var(--line);border-radius:8px;padding:12px 14px}
+.stats small{display:block;color:var(--mute);font-size:12px;margin-bottom:4px}.stats b{font:400 12px/1.5 var(--px);color:var(--gold);word-break:break-word}
+.card{background:linear-gradient(180deg,rgba(26,58,76,.88),rgba(15,37,50,.92));backdrop-filter:blur(8px);border:2px solid rgba(244,185,59,.35);border-radius:12px;box-shadow:0 0 0 4px rgba(0,0,0,.25),0 24px 60px rgba(0,0,0,.5),0 0 60px rgba(244,185,59,.08);overflow:hidden}
+.tabs{background:rgba(0,0,0,.18)}.tabs button{transition:.2s}.tabs button:hover{color:var(--text)}.tabs button.on{background:rgba(244,185,59,.08)}
+input[type=text]{border-radius:8px;transition:.2s}input[type=text]:focus{box-shadow:0 0 0 4px rgba(244,185,59,.15)}
+.chips button{border-radius:99px;transition:.15s}.chips button:hover{transform:translateY(-2px);background:rgba(244,185,59,.1)}
+.calc div{border-radius:8px;background:linear-gradient(180deg,rgba(59,226,138,.07),transparent)}
+.btn{border-radius:8px;position:relative;overflow:hidden;background:linear-gradient(180deg,#ffd666,#f4b93b);transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 8px 24px rgba(244,185,59,.3)}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);animation:shine 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.row{border-radius:8px;transition:.2s}.row:hover{border-color:rgba(244,185,59,.5)}
+.foot{text-align:center;color:var(--mute);font-size:12px;margin:40px auto 0;max-width:60ch}
+.adm{backdrop-filter:blur(8px);border-radius:12px}
+@media(max-width:520px){.stats{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -124,11 +151,13 @@ input[type=text]:focus{border-color:var(--gold)}
   <div>
     <h1 class="big" id="big">+10%</h1>
     <p class="sub">codziennie od wpłaconej kwoty</p>
+    <div class="pills"><span>⛏ Zysk co 24 h</span><span>✔ Ręczna weryfikacja wpłat</span><span>💬 Support w panelu gracza</span></div>
     <ol class="steps">
       <li>Wpisz nick i kwotę (minimum 500 000).</li>
       <li>Wyślij komendę <code>/pay</code> w grze i dodaj screenshot przelewu.</li>
       <li>Po zatwierdzeniu wpłaty zysk naliczany jest co 24 h.</li>
     </ol>
+    <div class="stats"><div><small>Łącznie w rankingu</small><b id="s-tot">—</b></div><div><small>Graczy w rankingu</small><b id="s-pl">—</b></div><div><small>Stawka dzienna</small><b id="s-pct">—</b></div></div>
     <p class="rules" id="rules"></p>
   </div>
 
@@ -186,6 +215,7 @@ input[type=text]:focus{border-color:var(--gold)}
     </div>
   </section>
 </div>
+<p class="foot">Waluta w grze serwera – nie prawdziwe pieniądze. Prognozy zysku wynikają z regulaminu i nie są gwarancją wypłaty.</p>
 </div>
 
 <button class="adm-fab" id="adm-fab" type="button" aria-haspopup="dialog" aria-expanded="false">⚙ Admin</button>
@@ -201,7 +231,14 @@ input[type=text]:focus{border-color:var(--gold)}
     <div class="adm-tabs"><button class="on" id="adm-t1" type="button">Wpłaty</button><button id="adm-t2" type="button">Ranking</button><button id="adm-t3" type="button">Blacklista</button><button id="adm-t4" type="button">Support</button></div>
     <div class="adm-tools"><button class="link" id="adm-ref" type="button">Odśwież</button><button class="link" id="adm-out" type="button">Wyloguj</button></div>
     <div id="adm-list"></div>
-    <div id="adm-bl" hidden></div><div id="adm-sup" hidden></div>
+    <div id="adm-bl" hidden>
+      <label for="b-nick">Nick</label>
+      <input id="b-nick" type="text" maxlength="16" autocomplete="off" placeholder="np. Steve123 (może być puste)">
+      <label for="b-ip">Adres IP</label>
+      <input id="b-ip" type="text" maxlength="45" autocomplete="off" placeholder="np. 83.1.2.3 (może być puste)">
+      <button class="btn" id="b-add" type="button" style="margin:6px 0 14px">Dodaj do blacklisty</button>
+      <div id="b-list"></div>
+    </div><div id="adm-sup" hidden></div>
     <div id="adm-rank" hidden>
       <label for="r-nick">Nick</label>
       <input id="r-nick" type="text" maxlength="16" autocomplete="off" placeholder="np. Steve123">
@@ -484,7 +521,7 @@ function renderAdm(list){
     var row = el("div","row q"), head = el("div","rh"), tag = el("span","tag"), act = el("div","adm-act");
     head.appendChild(el("strong",null,String(d.nick))); head.appendChild(tag); row.appendChild(head);
     row.appendChild(el("p","meta", fmt(d.amount) + " · " + d.id + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "") + (d.ip ? " · IP " + d.ip : "")));
-    if(d.ip){ var bb = el("button","adm-del","Blacklist (IP + nick)"); bb.type = "button"; bb.onclick = function(){ if(confirm("Zablokować " + d.nick + " i IP " + d.ip + "?")) admApi("/admin/blacklist",{action:"add",ip:d.ip,nick:d.nick}).then(function(){ bb.textContent = "Zablokowano"; bb.disabled = true; }).catch(admErr); }; row.appendChild(bb); }
+    { var bb = el("button","adm-del",d.ip ? "Blacklist (IP + nick)" : "Blacklist (nick)"); bb.type = "button"; bb.onclick = function(){ if(confirm("Zablokować " + d.nick + (d.ip ? " i IP " + d.ip : "") + "?")) admApi("/admin/blacklist",{action:"add",ip:d.ip||"",nick:d.nick}).then(function(){ bb.textContent = "Zablokowano"; bb.disabled = true; }).catch(admErr); }; row.appendChild(bb); }
     if(typeof d.proof === "string" && /^https:\/\//.test(d.proof)){
       var a = el("a","adm-link","Zobacz screenshot"); a.href = d.proof; a.target = "_blank"; a.rel = "noopener noreferrer"; row.appendChild(a);
     }
@@ -539,13 +576,13 @@ function admTab(n){ // 0 = reset, 1 wpłaty, 2 ranking, 3 blacklista, 4 support
 var admCur = 1;
 function blLoad(){
   admMsg(""); admApi("/admin/blacklist").then(function(j){
-    var box = $("adm-bl"); box.textContent = "";
+    var box = $("b-list"); box.textContent = "";
     if(!(j.entries||[]).length){ box.appendChild(el("p","empty","Blacklista jest pusta.")); return; }
     j.entries.forEach(function(d){
       var row = el("div","row q"), h = el("div","rh"), b = el("button","adm-del","Odblokuj"); b.type = "button";
       h.appendChild(el("strong",null,String(d.nick||"—"))); h.appendChild(b); row.appendChild(h);
-      row.appendChild(el("p","meta","IP " + d.ip + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
-      b.onclick = function(){ b.disabled = true; admApi("/admin/blacklist",{action:"remove",ip:d.ip,nick:d.nick}).then(blLoad).catch(admErr); };
+      row.appendChild(el("p","meta",(d.ip ? "IP " + d.ip : "bez IP") + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
+      b.onclick = function(){ b.disabled = true; admApi("/admin/blacklist",{action:"remove",ip:d.ip||"",nick:d.nick||""}).then(blLoad).catch(admErr); };
       box.appendChild(row);
     });
   }).catch(admErr);
@@ -599,6 +636,14 @@ $("r-add").onclick = function(){
 };
 $("adm-t1").onclick = function(){ admTab(1); };
 $("adm-t2").onclick = function(){ admTab(2); };
+$("b-add").onclick = function(){
+  var nick = $("b-nick").value.trim(), ip = $("b-ip").value.trim(), b = this;
+  if(!nick && !ip){ admMsg("Wpisz nick albo adres IP."); return; }
+  if(nick && !/^[A-Za-z0-9_]{3,16}$/.test(nick)){ admMsg("Nick: 3–16 znaków (litery, cyfry, _)."); return; }
+  if(ip && !/^[0-9a-fA-F:.]{3,45}$/.test(ip)){ admMsg("Niepoprawny adres IP."); return; }
+  b.disabled = true; admMsg("");
+  admApi("/admin/blacklist",{action:"add",ip:ip,nick:nick}).then(function(){ $("b-nick").value = ""; $("b-ip").value = ""; blLoad(); }).catch(admErr).then(function(){ b.disabled = false; });
+};
 $("adm-t3").onclick = function(){ admTab(3); };
 $("adm-t4").onclick = function(){ admTab(4); };
 $("adm-ref").onclick = function(){ admTab(admCur); };
@@ -644,6 +689,14 @@ $("chat-go").onclick = function(){
 $("chat-in").onkeydown = function(e){ if(e.key === "Enter") $("chat-go").onclick(); };
 setInterval(function(){ if(!$("p-me").hidden) { chatLoad(); } }, 15000);
 if(TOK && load().length) showTab("me"); // stała sesja: gracz od razu widzi swój panel
+
+(function(){ // statystyki z rankingu (te same dane co zakładka Ranking)
+  $("s-pct").textContent = "+" + CONFIG.dailyPercent + "%";
+  fetch(CONFIG.api + "/leaderboard?t=" + Date.now()).then(function(r){ return r.json(); }).then(function(j){
+    var p = (j.players || []).filter(function(x){ return x && +x.total > 0; });
+    $("s-tot").textContent = fmt(p.reduce(function(a,x){ return a + +x.total; }, 0)); $("s-pl").textContent = String(p.length);
+  }).catch(function(){});
+})();
 
 refreshTabs();
 </script>
