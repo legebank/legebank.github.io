@@ -141,6 +141,10 @@ input[type=text]{border-radius:8px;transition:.2s}input[type=text]:focus{box-sha
 .foot{text-align:center;color:var(--mute);font-size:12px;margin:40px auto 0;max-width:60ch}
 .adm{backdrop-filter:blur(8px);border-radius:12px}
 @media(max-width:520px){.stats{grid-template-columns:1fr}}
+.adm{width:min(540px,calc(100vw - 32px))}.adm h3{margin:16px 0 8px;font:500 15px var(--body);color:var(--gold)}
+.tb{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:8px 10px;align-items:center;font-size:13px;word-break:break-all}
+.tb .th{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--line);padding-bottom:4px}
+.tb .tag{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -576,15 +580,33 @@ function admTab(n){ // 0 = reset, 1 wpłaty, 2 ranking, 3 blacklista, 4 support
 var admCur = 1;
 function blLoad(){
   admMsg(""); admApi("/admin/blacklist").then(function(j){
-    var box = $("b-list"); box.textContent = "";
-    if(!(j.entries||[]).length){ box.appendChild(el("p","empty","Blacklista jest pusta.")); return; }
-    j.entries.forEach(function(d){
-      var row = el("div","row q"), h = el("div","rh"), b = el("button","adm-del","Odblokuj"); b.type = "button";
-      h.appendChild(el("strong",null,String(d.nick||"—"))); h.appendChild(b); row.appendChild(h);
-      row.appendChild(el("p","meta",(d.ip ? "IP " + d.ip : "bez IP") + (d.ts ? " · " + new Date(d.ts).toLocaleString("pl-PL") : "")));
-      b.onclick = function(){ b.disabled = true; admApi("/admin/blacklist",{action:"remove",ip:d.ip||"",nick:d.nick||""}).then(blLoad).catch(admErr); };
-      box.appendChild(row);
-    });
+    var box = $("b-list"), bl = j.entries || [], pl = j.players || []; box.textContent = "";
+    function isBan(nick, ip){ return bl.some(function(e){ return (e.ip && ip && e.ip === ip) || (e.nick && e.nick.toLowerCase() === nick.toLowerCase()); }); }
+    function tbl(heads){ var t = el("div","tb"); heads.forEach(function(x){ t.appendChild(el("span","th",x)); }); return t; }
+    box.appendChild(el("h3",null,"Zablokowani (" + bl.length + ")"));
+    if(!bl.length) box.appendChild(el("p","empty","Nikt nie jest zablokowany."));
+    else {
+      var t1 = tbl(["Nick","IP",""]);
+      bl.forEach(function(d){
+        var b = el("button","adm-del","Odblokuj"); b.type = "button";
+        b.onclick = function(){ b.disabled = true; admApi("/admin/blacklist",{action:"remove",ip:d.ip||"",nick:d.nick||""}).then(blLoad).catch(admErr); };
+        t1.appendChild(el("span",null,d.nick || "—")); t1.appendChild(el("span",null,d.ip || "bez IP")); t1.appendChild(b);
+      });
+      box.appendChild(t1);
+    }
+    box.appendChild(el("h3",null,"Wszyscy gracze (" + pl.length + ")"));
+    if(!pl.length) box.appendChild(el("p","empty","Brak graczy. Nick i IP zapisują się przy nowych wpłatach."));
+    else {
+      var t2 = tbl(["Nick","IP",""]);
+      pl.forEach(function(d){
+        t2.appendChild(el("span",null,d.nick)); t2.appendChild(el("span",null,d.ip || "brak IP"));
+        if(isBan(d.nick, d.ip)){ t2.appendChild(el("span","tag no","Zablokowany")); return; }
+        var b = el("button","adm-del","Blokuj"); b.type = "button";
+        b.onclick = function(){ if(confirm("Zablokować " + d.nick + (d.ip ? " i IP " + d.ip : "") + "?")){ b.disabled = true; admApi("/admin/blacklist",{action:"add",ip:d.ip||"",nick:d.nick}).then(blLoad).catch(function(x){ b.disabled = false; admErr(x); }); } };
+        t2.appendChild(b);
+      });
+      box.appendChild(t2);
+    }
   }).catch(admErr);
 }
 function supLoad(){
